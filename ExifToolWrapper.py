@@ -1,14 +1,15 @@
 import subprocess
 import os
 import json
+import sys
 
 class ExifToolWrapper(object):
 
     sentinel = "{ready}\r\n"
     #print ":".join("{:02x}".format(ord(c)) for c in self.sentinel)
 
-    def __init__(self, executable=".//exiftool"):
-        self.executable = executable
+    def __init__(self, executable="exiftool.exe"):
+        self.executable = os.path.realpath(os.path.join(sys.path[0],executable))
 
     def __enter__(self):
         self.process = subprocess.Popen(

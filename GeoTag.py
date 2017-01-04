@@ -20,17 +20,15 @@ class PhotoDateGeoTag:
 
 
 
-def CreateKMLFileForFiles():
-	
-	path = "K:\\images\\2016\\JPEG\\"
+def CreateKMLFileForFiles(inFolder,outFile="PhotoTour2.kml"):
 
 	dateGeoTagList = []
 	
 	with ExifToolWrapper.ExifToolWrapper() as e:
-		for photo in os.listdir(path):    
+		for photo in os.listdir(inFolder):    
 			if photo.endswith(".jpg") or photo.endswith(".ARW"):
 	
-				metadata = e.execute('-n','-DateTimeOriginal','-GPSLatitude','-GPSLatitudeRef','-GPSLongitude','-GPSLongitudeRef', join(path, photo))
+				metadata = e.execute('-n','-DateTimeOriginal','-GPSLatitude','-GPSLatitudeRef','-GPSLongitude','-GPSLongitudeRef', join(inFolder, photo))
 				metadata = metadata.split("\n")
 				
 				name = photo
@@ -72,17 +70,21 @@ def CreateKMLFileForFiles():
 		tagcounter += 1
 		previoustag = tag
 
-	kml.save("PhotoTour2.kml")
+	kml.save(outFile)
 	print "Tags %d" % tagcounter
 	print "Lines %d" % linecounter
 
 
 
 
-import time
+import time, sys
+
+print sys.argv
+path = "C:\\workspaces\\python\\Photo\\"
+
 start = time.clock()
 
-CreateKMLFileForFiles()
+CreateKMLFileForFiles(path)
 
 end = time.clock()
 print "Finsihed running in:"
