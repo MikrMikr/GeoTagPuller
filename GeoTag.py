@@ -23,7 +23,7 @@ class PhotoDateGeoTag:
 def CreateKMLFileForFiles(inFolder,outFile="PhotoTour2.kml"):
 
 	dateGeoTagList = []
-	
+	#ToDo: add recursive folder search for images, make recursion an command line option 
 	with ExifToolWrapper.ExifToolWrapper() as e:
 		for photo in os.listdir(inFolder):    
 			if photo.endswith(".jpg") or photo.endswith(".ARW"):
