@@ -1,9 +1,9 @@
-import os
+import os, sys, getopt
 from os.path import join
 import ExifToolWrapper
 
 
-class PhotoDateGeoTag: 
+class PhotoDateGeoTag:
 
 
 	def __init__(self, name, date, lat, lon): 
@@ -20,32 +20,42 @@ class PhotoDateGeoTag:
 
 
 
-def CreateKMLFileForFiles(inFolder,outFile="PhotoTour2.kml"):
-
-	dateGeoTagList = []
-	#ToDo: add recursive folder search for images, make recursion a command line option 
-	with ExifToolWrapper.ExifToolWrapper() as e:
-		for photo in os.listdir(inFolder):    
-			if photo.endswith(".jpg") or photo.endswith(".ARW"):
+def CreateKMLFileForFiles(inFolder, outFile=None, recurse=False):
 	
-				metadata = e.execute('-n','-DateTimeOriginal','-GPSLatitude','-GPSLatitudeRef','-GPSLongitude','-GPSLongitudeRef', join(inFolder, photo))
-				metadata = metadata.split("\n")
-				
-				name = photo
-				date = metadata[0][34:44],metadata[0][45:53]
-				lat = (metadata[1].split(":")[1])
-				lon = (metadata[3].split(":")[1])
+	dateGeoTagList = []
+	
+	if outFile is None:
+		outFile=os.path.realpath(os.path.join(sys.path[0], "PhotoTour2.kml"))
+	
+	
+	with ExifToolWrapper.ExifToolWrapper() as e:
+	
+		
+		for root,dirList,fileList in os.walk(inFolder):
+			for f in fileList:
+				if f.endswith(".jpg") or f.endswith(".ARW"):
+		
+					metadata = e.execute('-n','-DateTimeOriginal','-GPSLatitude','-GPSLatitudeRef','-GPSLongitude','-GPSLongitudeRef', join(root, f))
+					metadata = metadata.split("\n")
+					
+					name = f
+					date = metadata[0][34:44],metadata[0][45:53]
+					lat = (metadata[1].split(":")[1])
+					lon = (metadata[3].split(":")[1])
+	
+					if len(lat)>1:
+						dateGeoTagList.append(PhotoDateGeoTag(name,date,float(lat),float(lon)))
 
-				if len(lat)>1:
-					dateGeoTagList.append(PhotoDateGeoTag(name,date,float(lat),float(lon)))
-
-
+			if not recurse:
+				break
+	
 	
 	dateGeoTagList.sort(key=lambda x : x.name, reverse=False)
 
+	
 	import simplekml
 	
-	kml = simplekml.Kml(name="PhotoTour")
+	kml = simplekml.Kml(name=os.path.splitext(os.path.basename(outFile))[0])
 
 	tagcounter = 0
 	linecounter = 0
@@ -71,25 +81,49 @@ def CreateKMLFileForFiles(inFolder,outFile="PhotoTour2.kml"):
 		previoustag = tag
 
 	kml.save(outFile)
+	print "Saved to %s" %outFile
 	print "Tags %d" % tagcounter
 	print "Lines %d" % linecounter
 
 
 
+	
+def main():
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "i:or", ["inFolder=", "outFile"])
+	except getopt.GetoptError as err:
+		# print help information and exit:
+		print str(err)  # will print something like "option -a not recognized"
+		#usage()
+		sys.exit(2)
+	outFile = None
+	inFolder = None
+	recurse = False
+	for o, a in opts:
+		if o == "-r":
+			recurse = True
+		elif o in ("-i", "--inFolder"):
+			inFolder = a
+		elif o in ("-o", "--outFile"):
+			outFile = a
+		else:
+			assert False, "unhandled option"
+	
+	
+	
+	
+	import time
+	start = time.clock()
+	
+	CreateKMLFileForFiles(inFolder, outFile, recurse)
+	
+	end = time.clock()
 
-import time, sys
+	seconds = end - start
+	m, s = divmod(seconds,60)
+	h, m = divmod(m, 60)
+	print " Finsihed running in: %d:%02d:%d" % (h,m,s)
 
-print sys.argv
-path = "C:\\workspaces\\python\\Photo\\"
-
-start = time.clock()
-
-CreateKMLFileForFiles(path)
-
-end = time.clock()
-print "Finsihed running in:"
-seconds = end - start
-m, s = divmod(seconds,60)
-h, m = divmod(m, 60)
-print "%d:%02d:%d" % (h,m,s)
-
+	
+if __name__ == "__main__":
+    main()
