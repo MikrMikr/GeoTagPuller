@@ -20,12 +20,14 @@ class PhotoDateGeoTag:
 
 
 
-def CreateKMLFileForFiles(inFolder, outFile=None, recurse=False):
+def CreateKMLFileForFiles(inFolder, outFilePath=None, recurse=False):
 	
 	dateGeoTagList = []
-	
-	if outFile is None:
-		outFile=os.path.realpath(os.path.join(sys.path[0], "PhotoTour2.kml"))
+
+	if outFilePath is "" or outFilePath is None:		
+		outFile = os.path.basename(os.path.normpath(inFolder)).rstrip() + (".kml")
+		outFilePath=os.path.realpath(os.path.join(sys.path[0], outFile))	
+		
 	
 	
 	with ExifToolWrapper.ExifToolWrapper() as e:
@@ -55,7 +57,7 @@ def CreateKMLFileForFiles(inFolder, outFile=None, recurse=False):
 	
 	import simplekml
 	
-	kml = simplekml.Kml(name=os.path.splitext(os.path.basename(outFile))[0])
+	kml = simplekml.Kml(name=os.path.splitext(os.path.basename(outFilePath))[0])
 
 	tagcounter = 0
 	linecounter = 0
@@ -80,17 +82,18 @@ def CreateKMLFileForFiles(inFolder, outFile=None, recurse=False):
 		tagcounter += 1
 		previoustag = tag
 
-	kml.save(outFile)
-	print "Saved to %s" %outFile
+	
+	kml.save(outFilePath)
+	print "Saved to %s" %outFilePath
 	print "Tags %d" % tagcounter
 	print "Lines %d" % linecounter
 
 
 
-	
+
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "i:or", ["inFolder=", "outFile"])
+		opts, args = getopt.getopt(sys.argv[1:], "i:o:r", ["inFolder=", "outFile"])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err)  # will print something like "option -a not recognized"
